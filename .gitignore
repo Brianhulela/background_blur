@@ -4,3 +4,4 @@ yolo11n-seg.pt
 output_segmentation.jpg
 mask.jpg
 blurred_image.jpg
+background_blur.drawio
