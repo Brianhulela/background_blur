@@ -4,7 +4,7 @@ from ultralytics import YOLO
 import numpy as np
 
 # Download the image
-url, filename = ("https://images.unsplash.com/photo-1688759014828-588904bec2f0?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjkyfHx1bmJsdXJyZWQlMjBwb3J0YWl0fGVufDB8fDB8fHww", "scene.jpg")
+url, filename = ("https://images.unsplash.com/photo-1634646493821-9fca74f85f59?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mzk0fHx1bmJsdXJyZWQlMjBwb3J0YWl0fGVufDB8fDB8fHww", "scene.jpg")
 urllib.request.urlretrieve(url, filename)
 
 # Load the input image using OpenCV
@@ -32,15 +32,33 @@ for i, r in enumerate(results):
             mask = np.array(mask, dtype=np.int32)
             
             # Fill the segmentation mask with color (e.g., white for people)
-            cv2.fillPoly(segmentation_mask, [mask], (0, 255, 0))
+            cv2.fillPoly(segmentation_mask, [mask], (255, 255, 255))
 
-# Combine the original image with the segmentation mask
-segmentation_result = cv2.addWeighted(image, 1, segmentation_mask, 0.7, 0)
+def apply_blur_using_mask(image, mask, blur_strength=(25, 25)):
+    # Apply Gaussian blur to the entire image
+    blurred_image = cv2.GaussianBlur(image, blur_strength, 0)
 
-# Save the output image with segmentation
-cv2.imwrite("output_segmentation.jpg", segmentation_result)
+    # Create an inverted mask where the background is white and the person is black
+    inverted_mask = cv2.bitwise_not(mask)
+
+    # Use the mask to keep the person sharp and blur the background
+    background_blur = cv2.bitwise_and(blurred_image, blurred_image, mask=inverted_mask[:, :, 0])
+    person_region = cv2.bitwise_and(image, image, mask=mask[:, :, 0])
+
+    # Combine the sharp person region with the blurred background
+    final_image = cv2.add(person_region, background_blur)
+
+    # Save the result
+    cv2.imwrite("blurred_image.jpg", final_image)
+
+# Call the function to apply the blur and save the result
+apply_blur_using_mask(image, segmentation_mask)
+
+
+# Visualize the segmentation mask before combining it with the original image
+cv2.imwrite("mask.jpg", segmentation_mask)
 
 # Optionally display the image (make sure you're running in a GUI environment)
-cv2.imshow("Segmentation Result", segmentation_result)
+cv2.imshow("Segmentation Result", segmentation_mask)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
