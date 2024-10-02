@@ -3,7 +3,10 @@ import cv2
 from ultralytics import YOLO
 import numpy as np
 
-def segment_image(image, results):
+def segment_image(image, model):
+    # Predict with the model
+    results = model(filename)  # predict on an image 
+
     # Create an empty mask for segmentation
     segmentation_mask = np.zeros_like(image, dtype=np.uint8)
     
@@ -50,12 +53,9 @@ image = cv2.imread(filename)
 
 # Load the model
 model = YOLO("yolo11n-seg.pt")  # load an official YOLO model
-
-# Predict with the model
-results = model(filename)  # predict on an image 
  
 # Generate the segmentation mask   
-segmentation_mask = segment_image(image, results)
+segmentation_mask = segment_image(image, model)
 
 # Call the function to apply the blur and save the result
 final_image = apply_blur_using_mask(image, segmentation_mask)
